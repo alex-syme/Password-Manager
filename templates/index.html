@@ -1,0 +1,90 @@
+<!--
+  v1.0.0
+  Simple Password Manage webapp written in HTML, using flask for backend code.
+  To run:
+    - Create a virtual evnironment and install dependencies
+    - Run "pip install -r requirements.txt"
+    - Run "python app.py"
+    - Open http://127.0.0.1:5000 in your web browser
+  Author: Alex Syme (https://github.com/alex-syme)
+-->
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Password Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3064/3064197.png">
+  </head>
+  <body>
+    <div class="card">
+      <h1>
+        {% if logged_in and vault_name %}
+          {{ vault_name }}'s Password Manager
+        {% else %}
+          Password Manager
+        {% endif %}
+      </h1>
+
+      {% if not logged_in %}
+        <form method="post" action="/unlock">
+          <label>Master password</label>
+          <input type="password" name="password" required>
+          <button type="submit">Unlock</button>
+        </form>
+
+        <p>If this is your first run, create a master password below.</p>
+        <form method="post" action="/setup">
+          <label>Your name</label>
+          <input type="text" name="name" required>
+          <label>Set master password (first run)</label>
+          <input type="password" name="password" required>
+          <button type="submit">Set</button>
+        </form>
+      {% else %}
+        <a href="/logout">Lock</a>
+        <h2>Your entries</h2>
+        <table>
+          <tr><th>Site</th><th>Username</th><th>Password</th><th>Action</th></tr>
+          {% for e in entries %}
+          <tr>
+            <td>{{ e.name }}</td>
+            <td>{{ e.username }}</td>
+            <td>••••••</td>
+            <td><button onclick="showPassword({{ loop.index0 }})">Show</button></td>
+          </tr>
+          {% endfor %}
+        </table>
+
+        <h3>Add entry</h3>
+        <form method="post" action="/add">
+          <input name="name" placeholder="Site name">
+          <input name="username" placeholder="Username/email">
+          <input name="password" placeholder="Password">
+          <button type="submit">Add</button>
+        </form>
+
+        <script>
+          async function showPassword(idx){
+            const resp = await fetch('/show/' + idx);
+            if(resp.ok){
+              const data = await resp.json();
+              alert('Password: ' + data.password);
+            } else {
+              alert('Could not reveal password');
+            }
+          }
+        </script>
+      {% endif %}
+      <div style="margin-top:32px; text-align:center; font-size:0.95rem; color:#a1a1aa;">
+        Password manager made by
+        <a href="https://github.com/alex-syme" target="_blank" style="color:#60a5fa; text-decoration:underline;">
+          Alex Syme
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
